@@ -8,15 +8,16 @@ services:
     - DB_PASS=password
     - DB_NAME=redmine_production
     volumes:
-    - /srv/docker/redmine/mysql:/var/lib/mysql
+    #- /srv/docker/redmine/mysql:/var/lib/mysql
+    - ./mysql:/var/lib/mysql
 
   redmine:
-    build: ./
+    #build: ./
     image: sameersbn/redmine:4.1.1-9
     depends_on:
     - mysql
     environment:
-    - TZ=Asia/Kolkata
+    - TZ=Asia/Tokyo
 
     - DB_ADAPTER=mysql2
     - DB_HOST=mysql
@@ -25,7 +26,7 @@ services:
     - DB_PASS=password
     - DB_NAME=redmine_production
 
-    - REDMINE_PORT=10083
+    - REDMINE_PORT=80
     - REDMINE_HTTPS=false
     - REDMINE_RELATIVE_URL_ROOT=
     - REDMINE_SECRET_TOKEN=
@@ -58,7 +59,9 @@ services:
     - IMAP_INTERVAL=30
 
     ports:
-    - "10083:80"
+    - "80:80"
     volumes:
-    - /srv/docker/redmine/redmine_mysql:/home/redmine/data
-    - /srv/docker/redmine/redmine-logs:/var/log/redmine
+    #- /srv/docker/redmine/redmine_mysql:/home/redmine/data
+    #- /srv/docker/redmine/redmine-logs:/var/log/redmine
+    - ./redmine_data:/home/redmine/data
+    - ./redmine_logs:/var/log/redmine
