@@ -2,6 +2,7 @@ version: '3.7'
 
 services:
   mysql:
+    #build: ./mysql
     image: sameersbn/mysql:5.7.22-1
     environment:
     - DB_USER=redmine
@@ -12,8 +13,8 @@ services:
     - ./volumes/mysql:/var/lib/mysql
 
   redmine:
-    #build: ./
-    image: sameersbn/redmine:4.1.1-9
+    build: ./redmine
+    #image: sameersbn/redmine:4.1.1-9
     depends_on:
     - mysql
     environment:
