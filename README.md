@@ -5,6 +5,8 @@ docker-compose settings for docker-redmine
 
     $ git clone https://github.com/ogis-ito/docker-redmine.git
     $ cd docker-redmine
+    $ cp .env.example .env
+    $ docker-compose build
     $ docker-compose up -d
 
 ## 参考文献
