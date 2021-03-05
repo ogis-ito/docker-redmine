@@ -39,9 +39,12 @@ RUN set -eux; \
     #gosu redmine git clone --depth 1 https://github.com/jbbarth/redmine_base_deface.git plugins/redmine_base_deface; \
     #gosu redmine git clone --depth 1 https://github.com/jbbarth/redmine_drafts.git plugins/redmine_drafts; \
     gosu redmine git clone --depth 1 https://github.com/onozaty/redmine-view-customize.git plugins/view_customize; \
+    gosu redmine git clone --depth 1 https://github.com/haru/redmine_wiki_extensions.git plugins/redmine_wiki_extensions; \
+    gosu redmine git clone --depth 1 https://gitlab.com/bdemirkir/sidebar_hide.git plugins/sidebar_hide; \
     #gosu redmine git clone --depth 1 https://github.com/farend/scm-creator.git plugins/redmine_scm; \
     \
 # install themes
+    gosu redmine git clone --depth 1 https://github.com/farend/redmine_theme_farend_basic.git public/themes/farend_basic; \
     gosu redmine git clone -b redmine4.1 --depth 1 https://github.com/farend/redmine_theme_farend_bleuclair.git public/themes/bleuclair; \
     \
 # install gems
