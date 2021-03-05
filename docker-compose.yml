@@ -13,7 +13,15 @@ services:
     - ./volumes/mysql:/var/lib/mysql
 
   redmine:
-    build: ./redmine
+    build:
+      context: ./redmine
+      args:
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - http_proxy=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-}
+      - no_proxy=${NO_PROXY:-}
     #image: sameersbn/redmine:4.1.1-9
     depends_on:
     - mysql
