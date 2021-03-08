@@ -27,7 +27,8 @@ RUN set -eux; \
         #xapian-omega \
         #xpdf \
         #xz-utils \
-    ; \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*; \
     \
 # install plugins
     gosu redmine git config --global http.sslverify false; \
