@@ -43,6 +43,7 @@ RUN set -eux; \
     gosu redmine git clone --depth 1 https://github.com/gtt-project/sidebar_hide.git plugins/sidebar_hide; \
     #gosu redmine git clone --depth 1 https://gitlab.com/bdemirkir/sidebar_hide.git plugins/sidebar_hide; \
     #gosu redmine git clone --depth 1 https://github.com/farend/scm-creator.git plugins/redmine_scm; \
+    gosu redmine git clone --depth 1 https://github.com/AlphaNodes/redmine_messenger.git plugins/redmine_messenger; \
     \
 # install themes
     gosu redmine git clone --depth 1 https://github.com/farend/redmine_theme_farend_basic.git public/themes/farend_basic; \
