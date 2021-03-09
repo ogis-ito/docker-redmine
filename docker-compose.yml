@@ -4,6 +4,7 @@ services:
   mysql:
     #build: ./mysql
     image: sameersbn/mysql:5.7.22-1
+    restart: always
     environment:
     - DB_USER=redmine
     - DB_PASS=${DB_PASS}
@@ -23,6 +24,7 @@ services:
       - NO_PROXY=${NO_PROXY:-}
       - no_proxy=${NO_PROXY:-}
     #image: sameersbn/redmine:4.1.1-9
+    restart: always
     depends_on:
     - mysql
     environment:
