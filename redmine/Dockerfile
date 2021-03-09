@@ -27,7 +27,6 @@ RUN set -eux; \
         #xapian-omega \
         #xpdf \
         #xz-utils \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*; \
     \
 # install plugins
@@ -41,7 +40,8 @@ RUN set -eux; \
     #gosu redmine git clone --depth 1 https://github.com/jbbarth/redmine_drafts.git plugins/redmine_drafts; \
     gosu redmine git clone --depth 1 https://github.com/onozaty/redmine-view-customize.git plugins/view_customize; \
     gosu redmine git clone --depth 1 https://github.com/haru/redmine_wiki_extensions.git plugins/redmine_wiki_extensions; \
-    gosu redmine git clone --depth 1 https://gitlab.com/bdemirkir/sidebar_hide.git plugins/sidebar_hide; \
+    gosu redmine git clone --depth 1 https://github.com/gtt-project/sidebar_hide.git plugins/sidebar_hide; \
+    #gosu redmine git clone --depth 1 https://gitlab.com/bdemirkir/sidebar_hide.git plugins/sidebar_hide; \
     #gosu redmine git clone --depth 1 https://github.com/farend/scm-creator.git plugins/redmine_scm; \
     \
 # install themes
