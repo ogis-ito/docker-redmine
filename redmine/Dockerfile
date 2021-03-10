@@ -2,6 +2,8 @@ FROM sameersbn/redmine:4.1.1-9
 
 #COPY config/configuration.yml config
 
+COPY --chown=redmine vendor/cache/* vendor/cache/
+
 RUN set -eux; \
     \
     apt-get update && apt-get install -y --no-install-recommends \
@@ -50,7 +52,7 @@ RUN set -eux; \
     gosu redmine git clone -b redmine4.1 --depth 1 https://github.com/farend/redmine_theme_farend_bleuclair.git public/themes/bleuclair; \
     \
 # install gems
-    gosu redmine bundle install;
+    gosu redmine bundle install --local;
 
 RUN set -eux; \
     \
