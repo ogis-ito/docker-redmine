@@ -30,7 +30,7 @@ RUN set -eux; \
         #xpdf \
         #xz-utils \
     && rm -rf /var/lib/apt/lists/*; \
-    chown -R redmine vendor; \
+    chown -R redmine:redmine vendor/cache; \
     \
 # install plugins
     gosu redmine git config --global http.sslverify false; \
@@ -53,7 +53,7 @@ RUN set -eux; \
     gosu redmine git clone -b redmine4.1 --depth 1 https://github.com/farend/redmine_theme_farend_bleuclair.git public/themes/bleuclair; \
     \
 # install gems
-    gosu redmine bundle install --local;
+    gosu redmine bundle install --local --no-cache;
 
 RUN set -eux; \
     \
