@@ -2,7 +2,7 @@ FROM sameersbn/redmine:4.1.1-9
 
 #COPY config/configuration.yml config
 
-COPY --chown=redmine vendor/cache/* vendor/cache/
+COPY vendor/cache/* vendor/cache/
 
 RUN set -eux; \
     \
@@ -30,6 +30,7 @@ RUN set -eux; \
         #xpdf \
         #xz-utils \
     && rm -rf /var/lib/apt/lists/*; \
+    chown -R redmine vendor; \
     \
 # install plugins
     gosu redmine git config --global http.sslverify false; \
