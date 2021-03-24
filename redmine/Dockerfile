@@ -44,7 +44,7 @@ RUN set -ux \
     && gosu redmine git clone --depth 1 https://github.com/redmica/redmine_issues_panel.git plugins/redmine_issues_panel \
     #&& gosu redmine git clone --depth 1 https://github.com/akiko-pusu/redmine_issue_templates.git  plugins/redmine_issue_templates \
     && gosu redmine git clone --depth 1 https://github.com/AlphaNodes/redmine_messenger.git plugins/redmine_messenger \
-    #&& gosu redmine git clone --depth 1 https://github.com/farend/scm-creator.git plugins/redmine_scm \
+    && gosu redmine git clone --depth 1 https://github.com/farend/scm-creator.git plugins/redmine_scm \
     && gosu redmine git clone --depth 1 https://github.com/haru/redmine_wiki_extensions.git plugins/redmine_wiki_extensions \
     && gosu redmine git clone --depth 1 https://github.com/gtt-project/sidebar_hide.git plugins/sidebar_hide \
     #&& gosu redmine git clone --depth 1 https://gitlab.com/bdemirkir/sidebar_hide.git plugins/sidebar_hide \
@@ -63,3 +63,6 @@ RUN set -ux \
     \
     && sed -i -r "s/(:filter_html => true)/#\1/" lib/redmine/wiki_formatting/markdown/formatter.rb \
     && sed -i -r "s/(:key => '_redmine_session')/\1 + ENV['SESSION_KEY_SUFFIX']/" config/application.rb
+
+COPY config/scm.yml config/
+COPY scm/scripts/* /home/scm/scripts/

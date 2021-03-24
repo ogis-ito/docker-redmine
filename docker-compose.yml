@@ -78,3 +78,20 @@ services:
     #- /srv/docker/redmine/redmine-logs:/var/log/redmine
     - ./volumes/redmine_data:/home/redmine/data
     - ./volumes/redmine_logs:/var/log/redmine
+    - ./volumes/scm_repos:/home/scm/repos
+
+  scm:
+    build:
+      context: ./scm
+      args:
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - http_proxy=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-}
+      - no_proxy=${NO_PROXY:-}
+    restart: always
+    ports:
+    - "${SCM_PORT:-8080}:80"
+    volumes:
+    - ./volumes/scm_repos:/home/scm/repos
