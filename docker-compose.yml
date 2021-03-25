@@ -2,18 +2,29 @@ version: '3.7'
 
 services:
   mysql:
-    #build: ./mysql
-    image: sameersbn/mysql:5.7.22-1
+    #image: sameersbn/mysql:5.7.22-1
+    build:
+      context: ./mysql
+      args:
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - http_proxy=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-}
+      - no_proxy=${NO_PROXY:-}
     restart: always
     environment:
+    #- TZ=Asia/Tokyo
     - DB_USER=redmine
     - DB_PASS=${DB_PASS}
     - DB_NAME=redmine_production
     volumes:
     #- /srv/docker/redmine/mysql:/var/lib/mysql
     - ./volumes/mysql:/var/lib/mysql
+    #- ./volumes/mysql_logs:/var/log/mysql
 
   redmine:
+    #image: sameersbn/redmine:4.1.1-9
     build:
       context: ./redmine
       args:
@@ -23,7 +34,6 @@ services:
       - https_proxy=${HTTPS_PROXY:-}
       - NO_PROXY=${NO_PROXY:-}
       - no_proxy=${NO_PROXY:-}
-    #image: sameersbn/redmine:4.1.1-9
     restart: always
     depends_on:
     - mysql
@@ -91,6 +101,11 @@ services:
       - NO_PROXY=${NO_PROXY:-}
       - no_proxy=${NO_PROXY:-}
     restart: always
+    depends_on:
+    - mysql
+    environment:
+    #- TZ=Asia/Tokyo
+    - DB_PASS=${DB_PASS}
     ports:
     - "${SCM_PORT:-8080}:80"
     volumes:

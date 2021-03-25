@@ -1,8 +1,10 @@
 FROM sameersbn/redmine:4.1.1-9
 
-#COPY config/configuration.yml config
+ENV SESSION_KEY_SUFFIX=""
 
-COPY vendor/cache/* vendor/cache/
+COPY config/ config/
+COPY vendor/cache/ vendor/cache/
+COPY scm/scripts/ /home/scm/scripts/
 
 RUN set -ux \
     \
@@ -31,7 +33,9 @@ RUN set -ux \
         #xpdf \
         #xz-utils \
     && rm -rf /var/lib/apt/lists/* \
+    && chown -R redmine:redmine config \
     && chown -R redmine:redmine vendor/cache \
+    && chown -R redmine:redmine /home/scm/scripts \
     \
 # install plugins
     && gosu redmine git config --global http.sslverify false \
@@ -57,12 +61,7 @@ RUN set -ux \
 # install gems
     && gosu redmine bundle install --local --no-cache
 
-ENV SESSION_KEY_SUFFIX=""
-
 RUN set -ux \
     \
     && sed -i -r "s/(:filter_html => true)/#\1/" lib/redmine/wiki_formatting/markdown/formatter.rb \
     && sed -i -r "s/(:key => '_redmine_session')/\1 + ENV['SESSION_KEY_SUFFIX']/" config/application.rb
-
-COPY config/scm.yml config/
-COPY scm/scripts/* /home/scm/scripts/
