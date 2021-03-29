@@ -89,6 +89,7 @@ services:
     - ./volumes/redmine_data:/home/redmine/data
     - ./volumes/redmine_logs:/var/log/redmine
     - ./volumes/scm_repos:/home/scm/repos
+    #- scm_repos:/home/scm/repos
 
   scm:
     build:
@@ -110,3 +111,14 @@ services:
     - "${SCM_PORT:-8080}:80"
     volumes:
     - ./volumes/scm_repos:/home/scm/repos
+    #- scm_repos:/home/scm/repos
+
+#volumes:
+#  mysql
+#    driver: local
+#  redmine_data:
+#    driver: local
+#  redmine_logs:
+#    driver: local
+#  scm_repos:
+#    driver: local
