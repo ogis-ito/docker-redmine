@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -ux
 
 mkdir -p /home/scm/repos/git
 mkdir -p /home/scm/repos/svn

@@ -111,6 +111,7 @@ services:
     - "${SCM_PORT:-8080}:80"
     volumes:
     - ./volumes/scm_repos:/home/scm/repos
+    - ./volumes/scm_logs:/var/log/apache2
     #- scm_repos:/home/scm/repos
 
 #volumes:
@@ -121,4 +122,6 @@ services:
 #  redmine_logs:
 #    driver: local
 #  scm_repos:
+#    driver: local
+#  scm_logs:
 #    driver: local

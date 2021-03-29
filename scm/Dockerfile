@@ -20,22 +20,25 @@ RUN set -ux \
         vim \
     && rm -rf /var/lib/apt/lists/* \
     \
-    && a2enmod dav \
-    && a2enmod dav_fs \
-    && a2enmod dav_svn \
-    && a2enmod perl \
-    \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
     && dpkg-reconfigure -f noninteractive tzdata
+    #\
+    #&& a2enmod dav \
+    #&& a2enmod dav_fs \
+    #&& a2enmod dav_svn \
+    #&& a2enmod perl
 
-COPY etc/apache2/mods-available/ /etc/apache2/mods-available/
+COPY etc/apache2/ /etc/apache2/
+COPY usr/share/perl5/ /usr/share/perl5/
 COPY run_apache.sh /home/scm/
 
-#RUN set -ux \
-    #\
+RUN set -ux \
+    \
     #&& mkdir -p /home/scm/repos/git \
     #&& mkdir -p /home/scm/repos/svn \
     #&& chown -R www-data /home/scm
+    && echo "ServerName localhost" > /etc/apache2/conf-available/fqdn.conf \
+    && a2enconf fqdn
 
 EXPOSE 80
 
