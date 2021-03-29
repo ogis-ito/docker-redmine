@@ -1,5 +1,7 @@
 FROM ubuntu:xenial-20190222
 
+ENV TZ=Asia/Tokyo
+
 RUN set -ux \
     \
     && apt-get update \
@@ -23,7 +25,8 @@ RUN set -ux \
     && a2enmod dav_svn \
     && a2enmod perl \
     \
-    && ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+    && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata
 
 COPY etc/apache2/mods-available/ /etc/apache2/mods-available/
 COPY run_apache.sh /home/scm/

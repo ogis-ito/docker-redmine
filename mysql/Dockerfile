@@ -1,5 +1,7 @@
 FROM sameersbn/mysql:5.7.22-1
 
+ENV TZ=Asia/Tokyo
+
 RUN set -ux \
     \
     && apt-get update \
@@ -7,4 +9,5 @@ RUN set -ux \
         tzdata \
     && rm -rf /var/lib/apt/lists/* \
     \
-    && ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+    && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata
