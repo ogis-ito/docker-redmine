@@ -36,7 +36,8 @@ RUN set -ux \
     \
     #&& mkdir -p /home/scm/repos/git \
     #&& mkdir -p /home/scm/repos/svn \
-    #&& chown -R www-data /home/scm
+    #&& chown -R www-data /home/scm \
+    && chmod +x /home/scm/run_apache.sh \
     && echo "ServerName localhost" > /etc/apache2/conf-available/fqdn.conf \
     && a2enconf fqdn
 
