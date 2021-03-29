@@ -36,47 +36,47 @@ Authen::Simple::LDAP (and IO::Socket::SSL if LDAPS is used):
 
 =head1 CONFIGURATION
 
-   ## This module has to be in your perl path
-   ## eg:  /usr/lib/perl5/Apache/Authn/Redmine.pm
-   PerlLoadModule Apache::Authn::Redmine
-   <Location /svn>
-     DAV svn
-     SVNParentPath "/var/svn"
+  ## This module has to be in your perl path
+  ## eg:  /usr/lib/perl5/Apache/Authn/Redmine.pm
+  PerlLoadModule Apache::Authn::Redmine
+  <Location /svn>
+    DAV svn
+    SVNParentPath "/var/svn"
 
-     AuthType Basic
-     AuthName redmine
-     Require valid-user
+    AuthType Basic
+    AuthName redmine
+    Require valid-user
 
-     PerlAccessHandler Apache::Authn::Redmine::access_handler
-     PerlAuthenHandler Apache::Authn::Redmine::authen_handler
+    PerlAccessHandler Apache::Authn::Redmine::access_handler
+    PerlAuthenHandler Apache::Authn::Redmine::authen_handler
 
-     ## for mysql
-     RedmineDSN "DBI:mysql:database=databasename;host=my.db.server"
-     ## for postgres
-     # RedmineDSN "DBI:Pg:dbname=databasename;host=my.db.server"
+    ## for mysql
+    RedmineDSN "DBI:mysql:database=databasename;host=my.db.server"
+    ## for postgres
+    # RedmineDSN "DBI:Pg:dbname=databasename;host=my.db.server"
 
-     RedmineDbUser "redmine"
-     RedmineDbPass "password"
-     ## Optional where clause (fulltext search would be slow and
-     ## database dependent).
-     # RedmineDbWhereClause "and members.role_id IN (1,2)"
-     ## Optional credentials cache size
-     # RedmineCacheCredsMax 50
+    RedmineDbUser "redmine"
+    RedmineDbPass "password"
+    ## Optional where clause (fulltext search would be slow and
+    ## database dependent).
+    # RedmineDbWhereClause "and members.role_id IN (1,2)"
+    ## Optional credentials cache size
+    # RedmineCacheCredsMax 50
   </Location>
 
 To be able to browse repository inside redmine, you must add something
 like that :
 
-   <Location /svn-private>
-     DAV svn
-     SVNParentPath "/var/svn"
-     Order deny,allow
-     Deny from all
-     # only allow reading orders
-     <Limit GET PROPFIND OPTIONS REPORT>
-       Allow from redmine.server.ip
-     </Limit>
-   </Location>
+  <Location /svn-private>
+    DAV svn
+    SVNParentPath "/var/svn"
+    Order deny,allow
+    Deny from all
+    # only allow reading orders
+    <Limit GET PROPFIND OPTIONS REPORT>
+      Allow from redmine.server.ip
+    </Limit>
+  </Location>
 
 and you will have to use this reposman.rb command line to create repository :
 
@@ -123,25 +123,25 @@ block:
 Here's a sample Apache configuration which integrates git-http-backend with
 a MySQL database and this new option:
 
-   SetEnv GIT_PROJECT_ROOT /var/www/git/
-   SetEnv GIT_HTTP_EXPORT_ALL
-   ScriptAlias /git/ /usr/libexec/git-core/git-http-backend/
-   <Location /git>
-       Order allow,deny
-       Allow from all
+  SetEnv GIT_PROJECT_ROOT /var/www/git/
+  SetEnv GIT_HTTP_EXPORT_ALL
+  ScriptAlias /git/ /usr/libexec/git-core/git-http-backend/
+  <Location /git>
+    Order allow,deny
+    Allow from all
 
-       AuthType Basic
-       AuthName Git
-       Require valid-user
+    AuthType Basic
+    AuthName Git
+    Require valid-user
 
-       PerlAccessHandler Apache::Authn::Redmine::access_handler
-       PerlAuthenHandler Apache::Authn::Redmine::authen_handler
-       # for mysql
-       RedmineDSN "DBI:mysql:database=redmine;host=127.0.0.1"
-       RedmineDbUser "redmine"
-       RedmineDbPass "xxx"
-       RedmineGitSmartHttp yes
-    </Location>
+    PerlAccessHandler Apache::Authn::Redmine::access_handler
+    PerlAuthenHandler Apache::Authn::Redmine::authen_handler
+    # for mysql
+    RedmineDSN "DBI:mysql:database=redmine;host=127.0.0.1"
+    RedmineDbUser "redmine"
+    RedmineDbPass "xxx"
+    RedmineGitSmartHttp yes
+  </Location>
 
 Make sure that all the names of the repositories under /var/www/git/ have a
 matching identifier for some project: /var/www/git/myproject and
@@ -233,31 +233,54 @@ my @directives = (
     req_override => OR_AUTHCFG,
     args_how => TAKE1,
   },
+  {
+    name => 'RedmineAuthnOnly',
+    req_override => OR_AUTHCFG,
+    args_how => TAKE1,
+  },
 );
 
 sub RedmineDSN {
   my ($self, $parms, $arg) = @_;
   $self->{RedmineDSN} = $arg;
-  my $query = "SELECT 
-                 users.hashed_password, users.salt, users.auth_source_id, roles.permissions, projects.status
-              FROM projects, users, roles
-              WHERE 
-                users.login=? 
-                AND projects.identifier=?
-                AND EXISTS (SELECT 1 FROM enabled_modules em WHERE em.project_id = projects.id AND em.name = 'repository')
-                AND users.type='User'
-                AND users.status=1 
-                AND (
-                  roles.id IN (SELECT member_roles.role_id FROM members, member_roles WHERE members.user_id = users.id AND members.project_id = projects.id AND members.id = member_roles.member_id)
-                  OR
-                  (cast(projects.is_public as CHAR) IN ('t', '1')
-                    AND (roles.builtin=1
-                         OR roles.id IN (SELECT member_roles.role_id FROM members, member_roles, users g
-                                 WHERE members.user_id = g.id AND members.project_id = projects.id AND members.id = member_roles.member_id
-                                 AND g.type = 'GroupNonMember'))
-                  )
-                )
-                AND roles.permissions IS NOT NULL";
+  my $query = "
+      SELECT
+        users.hashed_password,
+        users.salt,
+        users.auth_source_id,
+        roles.id,
+        roles.permissions,
+        projects.status
+      FROM users, roles, projects
+      WHERE
+        users.login = ?
+        AND users.status = 1
+        AND projects.identifier = ?
+        AND roles.permissions IS NOT NULL
+        AND (
+          roles.id IN (
+            SELECT member_roles.role_id
+            FROM members, member_roles
+            WHERE
+              members.user_id = users.id
+              AND members.project_id = projects.id
+              AND members.id = member_roles.member_id)
+          OR (
+            cast(projects.is_public as CHAR) IN ('t', '1')
+            AND (
+              roles.builtin = 1
+              OR
+                roles.id IN (
+                  SELECT member_roles.role_id
+                  FROM members, member_roles, users g
+                  WHERE
+                    members.user_id = g.id
+                    AND members.project_id = projects.id
+                    AND members.id = member_roles.member_id
+                    AND g.type = 'GroupNonMember')
+            )
+          )
+        )";
   $self->{RedmineQuery} = trim($query);
 }
 
@@ -286,6 +309,17 @@ sub RedmineGitSmartHttp {
     $self->{RedmineGitSmartHttp} = 1;
   } else {
     $self->{RedmineGitSmartHttp} = 0;
+  }
+}
+
+sub RedmineAuthnOnly {
+  my ($self, $parms, $arg) = @_;
+  $arg = lc $arg;
+
+  if ($arg eq "yes" || $arg eq "true") {
+    $self->{RedmineAuthnOnly} = 1;
+  } else {
+    $self->{RedmineAuthnOnly} = 0;
   }
 }
 
@@ -326,18 +360,16 @@ sub access_handler {
   my $r = shift;
 
   unless ($r->some_auth_required) {
-      $r->log_reason("No authentication has been configured");
-      return FORBIDDEN;
+    $r->log_reason("No authentication has been configured");
+    return FORBIDDEN;
   }
 
   return OK unless request_is_read_only($r);
 
   my $project_id = get_project_identifier($r);
 
-  if (is_public_project($project_id, $r) && anonymous_allowed_to_browse_repository($project_id, $r)) {
-    $r->user("");
-    $r->set_handlers(PerlAuthenHandler => [\&OK]);
-  }
+  $r->set_handlers(PerlAuthenHandler => [\&OK])
+      if is_public_project($project_id, $r) && anonymous_allowed_to_browse_repository($project_id, $r);
 
   return OK
 }
@@ -349,10 +381,10 @@ sub authen_handler {
   return $res unless $res == OK;
 
   if (is_member($r->user, $redmine_pass, $r)) {
-      return OK;
+    return OK;
   } else {
-      $r->note_auth_failure();
-      return DECLINED;
+    $r->note_auth_failure();
+    return DECLINED;
   }
 }
 
@@ -382,33 +414,31 @@ sub is_authentication_forced {
 }
 
 sub is_public_project {
-    my $project_id = shift;
-    my $r = shift;
+  my $project_id = shift;
+  my $r = shift;
 
-    if (is_authentication_forced($r)) {
-      return 0;
+  if (is_authentication_forced($r)) {
+    return 0;
+  }
+
+  my $dbh = connect_database($r);
+  my $sth = $dbh->prepare(
+    "SELECT is_public FROM projects WHERE projects.identifier = ? AND projects.status <> 9;"
+  );
+
+  $sth->execute($project_id);
+  my $ret = 0;
+  if (my @row = $sth->fetchrow_array) {
+    if ($row[0] eq "1" || $row[0] eq "t") {
+      $ret = 1;
     }
+  }
+  $sth->finish();
+  undef $sth;
+  $dbh->disconnect();
+  undef $dbh;
 
-    my $dbh = connect_database($r);
-    my $sth = $dbh->prepare(
-        "SELECT is_public FROM projects
-          WHERE projects.identifier = ? AND projects.status <> 9
-          AND EXISTS (SELECT 1 FROM enabled_modules em WHERE em.project_id = projects.id AND em.name = 'repository');"
-    );
-
-    $sth->execute($project_id);
-    my $ret = 0;
-    if (my @row = $sth->fetchrow_array) {
-      if ($row[0] eq "1" || $row[0] eq "t") {
-        $ret = 1;
-      }
-    }
-    $sth->finish();
-    undef $sth;
-    $dbh->disconnect();
-    undef $dbh;
-
-    $ret;
+  $ret;
 }
 
 sub anonymous_allowed_to_browse_repository {
@@ -416,12 +446,24 @@ sub anonymous_allowed_to_browse_repository {
   my $r = shift;
 
   my $dbh = connect_database($r);
-  my $sth = $dbh->prepare(
-      "SELECT permissions FROM roles WHERE permissions like '%browse_repository%'
-        AND (roles.builtin = 2
-             OR roles.id IN (SELECT member_roles.role_id FROM projects, members, member_roles, users
-                             WHERE members.user_id = users.id AND members.project_id = projects.id AND members.id = member_roles.member_id
-                             AND projects.identifier = ? AND users.type = 'GroupAnonymous'));"
+  my $sth = $dbh->prepare("
+      SELECT permissions
+      FROM roles
+      WHERE
+        permissions like '%browse_repository%'
+        AND (
+          roles.builtin = 2
+          OR
+            roles.id IN (
+              SELECT member_roles.role_id
+              FROM projects, members, member_roles, users
+              WHERE
+                members.user_id = users.id
+                AND members.project_id = projects.id
+                AND members.id = member_roles.member_id
+                AND projects.identifier = ?
+                AND users.type = 'GroupAnonymous')
+        );"
   );
 
   $sth->execute($project_id);
@@ -442,16 +484,16 @@ sub anonymous_allowed_to_browse_repository {
 # perhaps we should use repository right (other read right) to check public access.
 # it could be faster BUT it doesn't work for the moment.
 # sub is_public_project_by_file {
-#     my $project_id = shift;
-#     my $r = shift;
+#   my $project_id = shift;
+#   my $r = shift;
 
-#     my $tree = Apache2::Directive::conftree();
-#     my $node = $tree->lookup('Location', $r->location);
-#     my $hash = $node->as_hash;
+#   my $tree = Apache2::Directive::conftree();
+#   my $node = $tree->lookup('Location', $r->location);
+#   my $hash = $node->as_hash;
 
-#     my $svnparentpath = $hash->{SVNParentPath};
-#     my $repos_path = $svnparentpath . "/" . $project_id;
-#     return 1 if (stat($repos_path))[2] & 00007;
+#   my $svnparentpath = $hash->{SVNParentPath};
+#   my $repos_path = $svnparentpath . "/" . $project_id;
+#   return 1 if (stat($repos_path))[2] & 00007;
 # }
 
 sub is_member {
@@ -460,63 +502,58 @@ sub is_member {
   my $r = shift;
 
   my $project_id  = get_project_identifier($r);
+  if ($project_id eq "") {
+    return is_valid_user($redmine_user, $redmine_pass, $r);
+  }
+
+  my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
+  if (defined $cfg->{RedmineAuthnOnly} and $cfg->{RedmineAuthnOnly}) {
+    if ($project_id eq "logout") {
+      return 0;
+    }
+    return is_valid_user($redmine_user, $redmine_pass, $r);
+  }
+
+  my $dbh         = connect_database($r);
 
   my $pass_digest = Digest::SHA::sha1_hex($redmine_pass);
 
   my $access_mode = request_is_read_only($r) ? "R" : "W";
 
-  my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
   my $usrprojpass;
   if ($cfg->{RedmineCacheCredsMax}) {
     $usrprojpass = $cfg->{RedmineCacheCreds}->get($redmine_user.":".$project_id.":".$access_mode);
     return 1 if (defined $usrprojpass and ($usrprojpass eq $pass_digest));
   }
-  my $dbh = connect_database($r);
   my $query = $cfg->{RedmineQuery};
   my $sth = $dbh->prepare($query);
   $sth->execute($redmine_user, $project_id);
 
   my $ret;
-  while (my ($hashed_password, $salt, $auth_source_id, $permissions, $project_status) = $sth->fetchrow_array) {
-      if ($project_status eq "9" || ($project_status ne "1" && $access_mode eq "W")) {
-        last;
-      }
+  while (my ($hashed_password, $salt, $auth_source_id, $role_id, $permissions, $project_status) = $sth->fetchrow_array) {
+    #$r->warn("$redmine_user:$project_id:$access_mode:$role_id");
+    if ($project_status eq "9" || ($project_status ne "1" && $access_mode eq "W")) {
+      last;
+    }
 
-      unless ($auth_source_id) {
-          my $method = $r->method;
-          my $salted_password = Digest::SHA::sha1_hex($salt.$pass_digest);
-          if ($hashed_password eq $salted_password && (($access_mode eq "R" && $permissions =~ /:browse_repository/) || $permissions =~ /:commit_access/) ) {
-              $ret = 1;
-              last;
-          }
-      } elsif ($CanUseLDAPAuth) {
-          my $sthldap = $dbh->prepare(
-              "SELECT host,port,tls,account,account_password,base_dn,attr_login from auth_sources WHERE id = ?;"
-          );
-          $sthldap->execute($auth_source_id);
-          while (my @rowldap = $sthldap->fetchrow_array) {
-            my $bind_as = $rowldap[3] ? $rowldap[3] : "";
-            my $bind_pw = $rowldap[4] ? $rowldap[4] : "";
-            if ($bind_as =~ m/\$login/) {
-              # replace $login with $redmine_user and use $redmine_pass
-              $bind_as =~ s/\$login/$redmine_user/g;
-              $bind_pw = $redmine_pass
-            }
-            my $ldap = Authen::Simple::LDAP->new(
-                host    =>      ($rowldap[2] eq "1" || $rowldap[2] eq "t") ? "ldaps://$rowldap[0]:$rowldap[1]" : $rowldap[0],
-                port    =>      $rowldap[1],
-                basedn  =>      $rowldap[5],
-                binddn  =>      $bind_as,
-                bindpw  =>      $bind_pw,
-                filter  =>      "(".$rowldap[6]."=%s)"
-            );
-            my $method = $r->method;
-            $ret = 1 if ($ldap->authenticate($redmine_user, $redmine_pass) && (($access_mode eq "R" && $permissions =~ /:browse_repository/) || $permissions =~ /:commit_access/));
+    # check the permission first
+    unless (($access_mode eq "R" && $permissions =~ /:browse_repository/) || $permissions =~ /:commit_access/) {
+      next;
+    }
 
-          }
-          $sthldap->finish();
-          undef $sthldap;
+    unless ($auth_source_id) {
+      my $method = $r->method;
+      my $salted_password = Digest::SHA::sha1_hex($salt.$pass_digest);
+      if ($hashed_password eq $salted_password) {
+        $ret = 1;
       }
+    } elsif ($CanUseLDAPAuth) {
+      if (ldap_authenticate($redmine_user, $redmine_pass, $auth_source_id, $dbh, $r)) {
+        $ret = 1;
+      }
+    }
+    # authenticate only once
+    last;
   }
   $sth->finish();
   undef $sth;
@@ -540,21 +577,122 @@ sub is_member {
   $ret;
 }
 
-sub get_project_identifier {
-    my $r = shift;
+sub is_valid_user {
+  my $redmine_user = shift;
+  my $redmine_pass = shift;
+  my $r = shift;
 
-    my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
-    my $location = $r->location;
-    $location =~ s/\.git$// if (defined $cfg->{RedmineGitSmartHttp} and $cfg->{RedmineGitSmartHttp});
-    my ($identifier) = $r->uri =~ m{$location/*([^/.]+)};
-    $identifier;
+  my $dbh         = connect_database($r);
+
+  my $pass_digest = Digest::SHA::sha1_hex($redmine_pass);
+
+  my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
+  my $usrprojpass;
+  if ($cfg->{RedmineCacheCredsMax}) {
+    $usrprojpass = $cfg->{RedmineCacheCreds}->get($redmine_user);
+    return 1 if (defined $usrprojpass and ($usrprojpass eq $pass_digest));
+  }
+  my $sth = $dbh->prepare(
+    "SELECT users.hashed_password, users.salt, users.auth_source_id FROM users WHERE users.login = ? AND users.status = 1"
+  );
+  $sth->execute($redmine_user);
+
+  my $ret;
+  while (my ($hashed_password, $salt, $auth_source_id) = $sth->fetchrow_array) {
+    #$r->warn("$redmine_user");
+    unless ($auth_source_id) {
+      my $method = $r->method;
+      my $salted_password = Digest::SHA::sha1_hex($salt.$pass_digest);
+      if ($hashed_password eq $salted_password) {
+        $ret = 1;
+      }
+    } elsif ($CanUseLDAPAuth) {
+      if (ldap_authenticate($redmine_user, $redmine_pass, $auth_source_id, $dbh, $r)) {
+        $ret = 1;
+      }
+    }
+    # authenticate only once
+    last;
+  }
+  $sth->finish();
+  undef $sth;
+  $dbh->disconnect();
+  undef $dbh;
+
+  if ($cfg->{RedmineCacheCredsMax} and $ret) {
+    if (defined $usrprojpass) {
+      $cfg->{RedmineCacheCreds}->set($redmine_user, $pass_digest);
+    } else {
+      if ($cfg->{RedmineCacheCredsCount} < $cfg->{RedmineCacheCredsMax}) {
+        $cfg->{RedmineCacheCreds}->set($redmine_user, $pass_digest);
+        $cfg->{RedmineCacheCredsCount}++;
+      } else {
+        $cfg->{RedmineCacheCreds}->clear();
+        $cfg->{RedmineCacheCredsCount} = 0;
+      }
+    }
+  }
+
+  $ret;
+}
+
+sub ldap_authenticate {
+  my $redmine_user   = shift;
+  my $redmine_pass   = shift;
+  my $auth_source_id = shift;
+  my $dbh = shift;
+  my $r   = shift;
+
+  my $sthldap = $dbh->prepare(
+    "SELECT host, port, tls, account, account_password, base_dn, attr_login from auth_sources WHERE id = ?;"
+  );
+  $sthldap->execute($auth_source_id);
+
+  my $ret;
+  while (my @rowldap = $sthldap->fetchrow_array) {
+    my $bind_as = $rowldap[3] ? $rowldap[3] : "";
+    my $bind_pw = $rowldap[4] ? $rowldap[4] : "";
+    if ($bind_as =~ m/\$login/) {
+      # replace $login with $redmine_user and use $redmine_pass
+      $bind_as =~ s/\$login/$redmine_user/g;
+      $bind_pw = $redmine_pass
+    }
+    my $ldap = Authen::Simple::LDAP->new(
+      host   => ($rowldap[2] eq "1" || $rowldap[2] eq "t") ? "ldaps://$rowldap[0]:$rowldap[1]" : $rowldap[0],
+      port   => $rowldap[1],
+      basedn => $rowldap[5],
+      binddn => $bind_as,
+      bindpw => $bind_pw,
+      filter => "(".$rowldap[6]."=%s)"
+    );
+    my $method = $r->method;
+    $r->warn("LDAP authenticate: $redmine_user");
+    if ($ldap->authenticate($redmine_user, $redmine_pass)) {
+      $ret = 1;
+    }
+    last;
+  }
+  $sthldap->finish();
+  undef $sthldap;
+
+  $ret;
+}
+
+sub get_project_identifier {
+  my $r = shift;
+
+  my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
+  my $location = $r->location;
+  $location =~ s/\.git$// if (defined $cfg->{RedmineGitSmartHttp} and $cfg->{RedmineGitSmartHttp});
+  my ($identifier) = $r->uri =~ m{$location/*([^/.]*)};
+  $identifier;
 }
 
 sub connect_database {
-    my $r = shift;
+  my $r = shift;
 
-    my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
-    return DBI->connect($cfg->{RedmineDSN}, $cfg->{RedmineDbUser}, $cfg->{RedmineDbPass});
+  my $cfg = Apache2::Module::get_config(__PACKAGE__, $r->server, $r->per_dir_config);
+  return DBI->connect($cfg->{RedmineDSN}, $cfg->{RedmineDbUser}, $cfg->{RedmineDbPass});
 }
 
 1;
