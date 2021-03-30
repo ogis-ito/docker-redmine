@@ -8,4 +8,5 @@ mkdir -p /home/scm/repos/svn
 chmod -R a+rw /home/scm/repos
 
 . /etc/apache2/envvars
+rm -f ${APACHE_PID_FILE}
 /usr/sbin/apache2 -D FOREGROUND
