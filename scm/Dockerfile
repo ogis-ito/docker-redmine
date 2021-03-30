@@ -14,6 +14,7 @@ RUN set -ux \
         libauthen-simple-ldap-perl \
         libdbd-mysql-perl \
         #libsvn-perl \
+        logrotate \
         mysql-client \
         subversion \
         tzdata \
