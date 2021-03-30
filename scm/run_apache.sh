@@ -1,12 +1,11 @@
 #!/bin/bash
 
-set -ux
+set -eux
 
 mkdir -p /home/scm/repos/git
 mkdir -p /home/scm/repos/svn
 #chown -R www-data /home/scm/repos
-chmod -R +rw /home/scm/repos
+chmod -R a+rw /home/scm/repos
 
-/etc/init.d/apache2 start
-
-tail -F /var/log/apache2/*.log
+. /etc/apache2/envvars
+/usr/sbin/apache2 -D FOREGROUND

@@ -36,7 +36,7 @@ RUN set -ux \
     && chown -R redmine:redmine config \
     && chown -R redmine:redmine vendor/cache \
     && chown -R redmine:redmine /home/scm/scripts \
-    && chmod -R +x /home/scm/scripts \
+    && chmod -R a+x /home/scm/scripts \
     \
 # install plugins
     && gosu redmine git config --global http.sslverify false \

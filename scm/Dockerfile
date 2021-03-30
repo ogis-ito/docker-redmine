@@ -37,7 +37,7 @@ RUN set -ux \
     #&& mkdir -p /home/scm/repos/git \
     #&& mkdir -p /home/scm/repos/svn \
     #&& chown -R www-data /home/scm \
-    && chmod +x /home/scm/run_apache.sh \
+    && chmod a+x /home/scm/run_apache.sh \
     && echo "ServerName localhost" > /etc/apache2/conf-available/fqdn.conf \
     && a2enconf fqdn
 
@@ -45,13 +45,6 @@ EXPOSE 80
 
 WORKDIR /home/scm
 
-#ENV APACHE_RUN_USER www-data
-#ENV APACHE_RUN_GROUP www-data
-#ENV APACHE_PID_FILE /var/run/apache2.pid
-#ENV APACHE_RUN_DIR /var/run/apache2
-#ENV APACHE_LOG_DIR /var/log/apache2
-#ENV APACHE_LOCK_DIR /var/lock/apache2
+ENV APACHE_CONFDIR=/etc/apache2
 
-#CMD ["apachectl", "-D", "FOREGROUND"]
-
-CMD ["/home/scm/run_apache.sh"]
+CMD /home/scm/run_apache.sh
