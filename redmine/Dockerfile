@@ -1,8 +1,8 @@
 FROM sameersbn/redmine:4.1.1-9
 
-#COPY config/configuration.yml config
+ENV SESSION_KEY_SUFFIX=""
 
-COPY vendor/cache/* vendor/cache/
+COPY vendor/cache/ vendor/cache/
 
 RUN set -ux \
     \
@@ -56,8 +56,6 @@ RUN set -ux \
     \
 # install gems
     && gosu redmine bundle install --local --no-cache
-
-ENV SESSION_KEY_SUFFIX=""
 
 RUN set -ux \
     \
