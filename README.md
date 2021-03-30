@@ -23,4 +23,10 @@ docker-compose settings for docker-redmine
   https://qiita.com/juno-nishizaki/items/45ff4186feb75d512306
 * 最新の Redmine 4 を Docker 公式イメージで運用する (2019)  
   https://qiita.com/bezeklik/items/b9d75ee74e0ae4c6d42c
+* Repositories access control with apache, mod_dav_svn and mod_perl  
+  https://www.redmine.org/projects/redmine/wiki/Repositories_access_control_with_apache_mod_dav_svn_and_mod_perl
+* RedmineのアカウントでSubversionリポジトリにアクセスする (2016)  
+  https://qiita.com/n_slender/items/eb1244bbd3d6ed95ea9e
+* Ubuntu Linuxコンテナをベースに、Apache 2用のDockerイメージを作る (2015)  
+  https://kazuhira-r.hatenablog.com/entry/20150628/1435492844
 
