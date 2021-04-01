@@ -11,3 +11,8 @@ RUN set -ux \
     \
     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
     && dpkg-reconfigure -f noninteractive tzdata
+
+RUN set -ux \
+    \
+    && echo "default-character-set = utf8" >> /etc/mysql/conf.d/mysql.cnf \
+    && echo "character-set-server = utf8" >> /etc/mysql/mysql.conf.d/mysqld.cnf

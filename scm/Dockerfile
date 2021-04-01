@@ -42,10 +42,12 @@ RUN set -ux \
     && echo "ServerName localhost" > /etc/apache2/conf-available/fqdn.conf \
     && a2enconf fqdn
 
+RUN set -ux \
+    \
+    && echo "default-character-set = utf8" >> /etc/mysql/conf.d/mysql.cnf
+
 EXPOSE 80
 
 WORKDIR /home/scm
-
-ENV APACHE_CONFDIR=/etc/apache2
 
 CMD /home/scm/run_apache.sh

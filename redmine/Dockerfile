@@ -2,10 +2,6 @@ FROM sameersbn/redmine:4.1.1-9
 
 ENV SESSION_KEY_SUFFIX=""
 
-COPY config/ config/
-COPY vendor/cache/ vendor/cache/
-COPY scm/scripts/ /home/scm/scripts/
-
 RUN set -ux \
     \
     && apt-get update \
@@ -32,7 +28,14 @@ RUN set -ux \
         #xapian-omega \
         #xpdf \
         #xz-utils \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY config/ config/
+COPY vendor/cache/ vendor/cache/
+COPY scm/scripts/ /home/scm/scripts/
+
+RUN set -ux \
+    \
     && chown -R redmine:redmine config \
     && chown -R redmine:redmine vendor/cache \
     && chown -R redmine:redmine /home/scm/scripts \
@@ -61,6 +64,10 @@ RUN set -ux \
     \
 # install gems
     && gosu redmine bundle install --local --no-cache
+
+RUN set -ux \
+    \
+    && echo "default-character-set = utf8" >> /etc/mysql/conf.d/mysql.cnf
 
 RUN set -ux \
     \
